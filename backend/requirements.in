@@ -1,0 +1,16 @@
+fastapi[standard]
+pydantic-settings
+python-dotenv
+uvicorn
+aiosqlite
+httpx
+pytest
+alembic
+sqladmin[full]
+pyjwt
+passlib
+passlib[bcrypt]
+sqlalchemy
+pydantic[email]
+pytest-asyncio
+websockets
