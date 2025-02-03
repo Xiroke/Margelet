@@ -5,7 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File",
+            "name": "Python Debugger: Pytest",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "cwd": "${workspaceFolder}/backend",
+            "args": ["tests/test_bots/test_bots.py"],
+        },
+        {
+            "name": "Python Debugger: Main.py",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",

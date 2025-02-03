@@ -12,11 +12,11 @@ export async function isAuthenticated() {
 }
 
 
-export async function isLogined() {
-    const token = cookies().get("access_token");
-    if (token) {
-        redirect("/chat");;
-    } else {
-        return false
-    }
-}
+// export async function isLogined() {
+//     const token = cookies().get("access_token");
+//     if (token) {
+//         redirect("/chat");;
+//     } else {
+//         return false
+//     }
+// }

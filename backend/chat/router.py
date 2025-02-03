@@ -1,19 +1,18 @@
-from os import access
-from turtle import title
-from fastapi import APIRouter, WebSocket, Query, Depends, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, WebSocket, Query, Depends
 from fastapi.websockets import WebSocketDisconnect
-from typing import Annotated, Dict, get_origin, List
-from auth.dao import GroupManager, TokenManager, UserManager, ChatManager, MessageMenager
-from auth.schemas import ListGroupRead, GroupRead
-from database import async_session_maker
+from typing import Annotated, Dict, List
+from dao import ChatManager, TokenManager, MessageManager, UserGroupManager
+from database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
-from auth.utils import get_current_active_user, verify_password, get_token_cookie, verify_token
-from fastapi.security import OAuth2PasswordBearer
-from auth.models import Chat, Token, User, Group, Message
-from .schemas import Full_info_chat, Server_to_websocket_data, Websocket_to_server_data
+from auth.utils import get_current_active_user, verify_token
+from .schemas import Server_to_client
+from .schemas import AllLastMessages, ChatMessages
+import json
+from pydantic import ValidationError
+from fastapi import HTTPException
 
-router = APIRouter(prefix="/api/chat", tags=["chat"])
+router = APIRouter(prefix='/api/chat', tags=['chat'])
+
 
 # html = """
 # <!DOCTYPE html>
@@ -35,7 +34,7 @@ router = APIRouter(prefix="/api/chat", tags=["chat"])
 #         <script>
 #         var ws = null;
 #         var token = null;
-        
+
 #         // Get token first
 #         fetch("/api/auth/get_token", {
 #             method: "GET",
@@ -71,93 +70,121 @@ router = APIRouter(prefix="/api/chat", tags=["chat"])
 # </html>
 # """
 
-    
+
 class ConnectionManager:
-    def __init__(self):
-        self.active_connections: Dict[int, Dict[int, List[WebSocket]]] = {}
+	def __init__(self):
+		self.active_connections: Dict[int,  List[WebSocket]] = {}  # {chat_id: [ws]}
 
-    async def connect(self, websocket: WebSocket, group_id: int, chat_id: int):
-        await websocket.accept()
+	async def connect(self, websocket: WebSocket, chat_id: int):
+		await websocket.accept()
+		# create key chat_id if not exists
+		if chat_id not in self.active_connections.keys():
+			self.active_connections[chat_id] = []
 
-        if group_id not in self.active_connections:
-            self.active_connections[group_id] = {}
+		self.active_connections[chat_id].append(websocket)
 
-        if chat_id not in self.active_connections[group_id]:
-            self.active_connections[group_id][chat_id] = []
+	def disconnect(self, websocket, chat_id: int):
+		self.active_connections[chat_id].remove(websocket)
 
-        self.active_connections[group_id][chat_id].append(websocket)
+	async def broadcast(
+		self,
+		text: str,
+		chat_id: int,
+		access_token: str,
+		session: AsyncSession,
+	):
+		user = await TokenManager.get_user_by_token(session, token=access_token)
+		message = await MessageManager.create_message(
+			session, user_id=user.id, chat_id=chat_id, text=text
+		)
+		await session.commit()
+		data = Server_to_client(
+			id=message.id,
+			local_id=message.local_id,
+			text=text,
+			name=user.name,
+			chat_id=chat_id,
+			created_at=message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+		)
+		for connection in self.active_connections[chat_id]:
+			await connection.send_text(data.model_dump_json())
 
-    def disconnect(self, websocket, group_id: int, chat_id: int):
-        if group_id in self.active_connections:
-            self.active_connections[group_id][chat_id].remove(websocket)
 
-            if not self.active_connections[group_id]:
-                del self.active_connections[group_id]
+connection_manager_users = ConnectionManager()
 
-    async def broadcast(self, message: str, group_id: int, chat_id: int, access_token: str):
-        async with async_session_maker() as session:
-            user = await TokenManager.get_user_by_token(session, token=access_token)
-        
-        async with async_session_maker() as session:
-            await MessageMenager.add_message(session, user_id=user.id, chat_id=chat_id, message=message)
-        for connection in self.active_connections[group_id][chat_id]:
-            await connection.send_text(Server_to_websocket_data(message=message, name=user.name).model_dump_json())
 
-    
-
-manager = ConnectionManager()
-
-@router.websocket("/{group_id}/{chat_id}")
+@router.websocket('/{chat_id}')
 async def websocket_endpoint(
-    *,
-    websocket: WebSocket,
-    group_id: int,
-    chat_id: int,
-    token: Annotated[str | None, Query()] = None,
+	session: Annotated[AsyncSession, Depends(get_async_session)],
+	websocket: WebSocket,
+	chat_id: int,
+	token: Annotated[str | None, Query()] = None,
 ):
-    await verify_token(token)
-    await manager.connect(websocket, group_id, chat_id)
-    try:
-        while True:
-            message = await websocket.receive_text()
-            await manager.broadcast(message, group_id, chat_id, token)
-            
-    except WebSocketDisconnect:
-        manager.disconnect(websocket,group_id, chat_id)
+	await verify_token(token, session)
+	await connection_manager_users.connect(websocket, chat_id)
+	try:
+		while True:
+			text = await websocket.receive_text()
+			await connection_manager_users.broadcast(
+				text, chat_id, token, session
+			)
 
-@router.post("/create_group")
-async def create_group(user: Annotated[User, Depends(get_current_active_user)], title: str, description: str):
-    group = Group(title=title, description=description)
-    group.users.append(user)
-    async with async_session_maker() as session:
-        group = await GroupManager.add(session, group)
-    return {"status": status.HTTP_201_CREATED}
+	except WebSocketDisconnect:
+		connection_manager_users.disconnect(websocket, chat_id)
 
-@router.get("/get_my_groups")
-async def get_token(user: Annotated[User, Depends(get_current_active_user)]):
-    async with async_session_maker() as session:
-        groups = await UserManager.get_groups(session, user)
-    return groups
 
-@router.get("/get_group_chats")
-async def get_group_chat(token: Annotated[str, Depends(get_token_cookie)], group_id: int):
-    async with async_session_maker() as session:
-        group = await GroupManager.get_one_by(session, id=group_id)
-        chats = await GroupManager.get_chats(session, group=group)
-    return chats
+@router.get('/chat_last_messages/{group_id}/{chat_id}')
+async def chat_last_messages(
+	user: Annotated[str, Depends(get_current_active_user)],
+	session: Annotated[AsyncSession, Depends(get_async_session)],
+	group_id: int,
+	chat_id: int,
+	last_message_local_id: int | List[int],
+):
+	# is User in Group
+	await UserGroupManager.get_one_by(session, group_id=group_id, user_id=user.id)
+	# is Chat in This Group
+	await ChatManager.get_one_by(session, id=chat_id, group_id=group_id)
 
-@router.get("/create_group_chat")
-async def create_group_chat(token: Annotated[str, Depends(get_token_cookie)], title: str, group_id: int):
-    async with async_session_maker() as session:
-        group = await GroupManager.get_one_by(session, id=group_id)
-    
-    chat = Chat(title=title, group=group)
-    async with async_session_maker() as session:
-        chat = await ChatManager.add(session, chat)
-    return {"status": status.HTTP_201_CREATED}
+	messages = await MessageManager.get_chat_last_messages(
+		session=session,
+		chat_id=chat_id,
+		last_message_local_id=last_message_local_id,
+	)
+	return messages
 
-@router.get("/last_group_messages")
-async def get_last_messages(token: Annotated[str, Depends(get_token_cookie)], group_id: int, chat_id: int):
-    async with async_session_maker() as session:
-        messages = await MessageMenager.get_messages(session, group_id, chat_id)
-    return messages
+
+@router.get('/chat_all_last_messages')
+async def chat_all_last_messages(
+	user: Annotated[str, Depends(get_current_active_user)],
+	session: Annotated[AsyncSession, Depends(get_async_session)],
+	params: str,
+):
+	params = json.loads(params)
+
+	chat_messages = []
+	for item in params:
+		try:
+			item = AllLastMessages(**item)
+		except ValidationError:
+			raise HTTPException(status_code = 400)
+		
+		await UserGroupManager.get_one_by(
+			session, group_id=item.group_id, user_id=user.id
+		)
+		await ChatManager.get_one_by(session, id=item.chat_id, group_id=item.group_id)
+		messages = await MessageManager.get_chat_last_messages(
+			session=session,
+			chat_id=item.chat_id,
+			last_message_local_id=item.last_message_local_id,
+		)
+		if messages:
+			chat_messages.append(
+				ChatMessages(
+					group_id=item.group_id,
+					chat_id=item.chat_id,
+					messages=messages,
+				)
+			)
+
+	return chat_messages

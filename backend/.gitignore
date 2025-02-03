@@ -1,4 +1,7 @@
 sqlite.db
+
+.ruff_cache/
+*.log
 .dev.env
 # Byte-compiled / optimized / DLL files
 __pycache__/

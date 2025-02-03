@@ -2,7 +2,6 @@ fastapi[standard]
 pydantic-settings
 python-dotenv
 uvicorn
-aiosqlite
 httpx
 pytest
 alembic
@@ -14,3 +13,7 @@ sqlalchemy
 pydantic[email]
 pytest-asyncio
 websockets
+aiosmtplib
+
+aiosqlite
+asyncpg

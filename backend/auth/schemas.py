@@ -1,91 +1,113 @@
 from typing import List, Optional
-
 from pydantic import BaseModel, ConfigDict
+from enum import Enum
+import datetime
 
 
 class JWTTokenSchema(BaseModel):
-    access_token: str
-    token_type: str
+	access_token: str
+	token_type: str
+
 
 class TokenBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    token: str
+	model_config = ConfigDict(from_attributes=True)
+	token: str
+
 
 class TokenCreate(TokenBase):
-    # token: str
-    user: "UserDB"
+	# token: str
+	user: 'UserDB'
+
 
 class TokenRead(TokenBase):
-    id: int
-    # token: str
-    user: "UserDB"
+	id: int
+	# token: str
+	user: 'UserDB'
+
 
 class TokenDB(TokenRead):
-    # id: int
-    # token: str
-    # user: "UserDB
-    pass
+	# id: int
+	# token: str
+	# user: "UserDB
+	pass
 
 
 class UserBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+	model_config = ConfigDict(from_attributes=True)
 
-    name: str
-    email: str
+	name: str
+	name_account: str
+
 
 class UserCreate(UserBase):
-    # name: str
-    # email: str
-    password: str
+	name: str
+	email: str
+	password: str
+
 
 class UserRead(UserBase):
-    id: int
-    # name: str
-    # email: str
-    is_active: bool
-    is_verified: bool
-    is_superuser: bool
-    token: Optional[List[TokenRead]] = None
+	id: int
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    email: Optional[str] = None
-    hashed_password: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_verified: Optional[bool] = None
-    is_superuser: Optional[bool] = None
+	name: Optional[str] = None
+	email: Optional[str] = None
+	hashed_password: Optional[str] = None
+	is_active: Optional[bool] = None
+	is_verified: Optional[bool] = None
+	is_superuser: Optional[bool] = None
+
 
 class UserDB(UserRead):
-    # id: int
-    # name: str
-    # email: str
-    hashed_password: str
-    # is_active: bool
-    # is_verified: bool
-    # is_superuser: bool
-    # tokens: Optional[List[TokenRead]] = None
-    
-class Message(BaseModel):
-    id: int
-    local_id: int
-    message: str
-    user_id: int
-    chat_id: int
+	# id: int
+	# name: str
+	email: str
+	hashed_password: str
+	is_active: bool
+	is_verified: bool
+	is_superuser: bool
+	tokens: Optional[List[TokenRead]] = None
 
-    model_config = ConfigDict(from_attributes=True)
+
+class BotUserCreate(UserBase):
+	name: str
+	password: str
+
+
+class Message(BaseModel):
+	id: int
+	local_id: int
+	text: str
+	user_id: int
+	chat_id: int
+	created_at: datetime.datetime
+
+	model_config = ConfigDict(from_attributes=True)
+
 
 class Chat(BaseModel):
-    id: int
-    title: str
-    model_config = ConfigDict(from_attributes=True)
+	id: int
+	title: str
+	model_config = ConfigDict(from_attributes=True)
+
 
 class GroupRead(BaseModel):
-    id: int
-    title: str
-    description: str
-    model_config = ConfigDict(from_attributes=True) 
+	id: int
+	title: str
+	description: str
+	model_config = ConfigDict(from_attributes=True)
+
 
 class ListGroupRead(BaseModel):
-    groups: List[GroupRead]
-    model_config = ConfigDict(from_attributes=True)
+	groups: List[GroupRead]
+	model_config = ConfigDict(from_attributes=True)
+
+
+class PermissionEnum(Enum):
+	ADMIN = 'admin'
+	CAN_EDIT_ROLE = 'can_edit_role'
+	CAN_CREATE_GROUP = 'can_create_group'
+	CAN_EDIT_MAIN_INFO_GROUP = 'can_edit_main_info_group'
+	CAN_CREATE_CHAT = 'can_create_chat'
+	CAN_EDIT_CHAT = 'can_edit_chat'
+	CAN_DELETE_CHAT = 'can_delete_chat'

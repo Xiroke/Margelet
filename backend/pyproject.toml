@@ -1,0 +1,11 @@
+[project]
+requires-python = ">=3.9"
+
+[tool.ruff]
+indent-width = 4
+line-length = 90
+exclude = [".venv"]
+
+[tool.ruff.format]
+indent-style = "tab"
+quote-style = "single"

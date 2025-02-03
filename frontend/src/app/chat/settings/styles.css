@@ -1,0 +1,429 @@
+* {
+    margin: 0;
+}
+
+body {
+    background: #1d1d27;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.container {
+    width: 60%;
+    height: 100%;
+    /* border: 2px solid #2C3542; */
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; */
+    color: white;
+    align-items: center;
+    overflow-y: auto;
+    margin-top: 3%;
+    margin-bottom: 10%;
+}
+
+.container::-webkit-scrollbar{
+    width: 1px;
+
+}
+
+.title {
+    color: white;
+    font-size: 32px;
+    text-align: center;
+    padding: 15px;
+}
+
+
+.wrap{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 98%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background: #26292F;
+    border-radius: 24px;
+}
+
+.main_title{
+    margin-top: 40px;
+    color: white;
+    font-size: 48px;
+    text-align: center;
+    padding: 25px;
+}
+
+.mini_title{
+    font-size: 16px;
+    color: #808080;
+    text-align: center;
+}
+
+.group_name{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inp{
+    border: none;
+    outline: none;
+    background: #353D4C;
+    height: 50px;
+    width: 280px;
+    border-radius: 8px;
+    color: white;
+    padding-left: 15px;
+}
+
+.description{
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.big_inp{
+    border: none;
+    outline: none;
+    background: #353D4C;
+    height: 150px;
+    width: 280px;
+    border-radius: 8px;
+    color: white;
+    padding-left: 15px;
+}
+
+.serv_avatar{
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.serv_photo_prev{
+    height: 150px;
+    width: 150px;
+    background: #353D4C;
+    border-radius: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.upload_serv_avatar{
+    background: transparent;
+    border: 2px solid #2C3542;
+    color: white;
+    padding: 10px 20px 10px 20px;
+    border-radius: 8px;
+    width: 280px;
+}
+
+.panorama{
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.serv_panorama_prev{
+    height: 200px;
+    width: 350px;
+    background: #353D4C;
+    border-radius: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.upload_serv_panorama{
+    background: transparent;
+    border: 2px solid #2C3542;
+    color: white;
+    padding: 10px 20px 10px 20px;
+    border-radius: 8px;
+    width: 280px;
+}
+
+/* zov */
+.chat-actions {
+    padding: 20px;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.chat-actions h3 {
+    margin-bottom: 10px;
+    color: #e4e4e4;
+    font-size: 32px;
+    text-align: center;
+}
+
+.chat-action-btn {
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #353D4C;
+    border: none;
+    border-radius: 12px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bx2 {  
+    width: 100%;
+    display: flex;
+    justify-content: left;
+    padding-left: 10px;
+}
+
+.base-channel-name {
+    margin: 0;
+}  
+
+.voice-channels {
+    margin-top: 20px;
+    width: 100%;
+}
+
+.voice-channel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #353D4C;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    height: 40px;
+}
+
+.member-count {
+    color: #949ba4;
+    margin-left: 10px;
+}
+
+.chanel-name {
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.mic {
+    display: flex;
+    align-items: center;
+}
+
+.trash-bin{
+    color: red;
+    
+}
+
+.add_channel{
+    background: transparent;
+    border: 2px solid #2C3542;
+    color: white;
+    padding: 10px 20px 10px 20px;
+    border-radius: 8px;
+    width: 280px;
+}
+
+
+
+i {
+    color: #3366C0;
+    vertical-align: center;
+}
+/* zov */
+
+.general {
+    margin-top: 50px;
+    border-top: 2px solid white;
+    padding: 10px 20px 10px 20px;
+    width: 90%;
+}
+
+.notifications {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 20px 0px 20px 0px;
+}
+
+.name {
+    font-size: 20px;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 5px;
+}
+
+.on {
+    margin-right: 10px;
+    padding: 5px 15px 5px 15px;
+    background: green;
+    border-radius: 5px;
+}
+
+.off {
+    margin-right: 10px;
+    padding: 5px 15px 5px 15px;
+    background: rgb(128, 0, 0);
+    border-radius: 5px;
+}
+
+.theme {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 20px 0px 20px 0px;
+}
+
+.dark {
+    margin-right: 10px;
+    padding: 5px 15px 5px 15px;
+    background: rgb(255, 255, 255);
+    border-radius: 5px;
+    color: black;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.light {
+    margin-right: 10px;
+    padding: 5px 15px 5px 15px;
+    background: #2C3542;
+    border-radius: 5px;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+
+
+
+.group-set {
+    border-top: 2px solid white;
+    padding: 10px 20px 10px 20px;
+    width: 90%;
+}
+
+.roles {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 20px 0px 20px 0px;
+}
+
+.act {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 20px 0px 20px 0px;
+}
+
+.button-add {
+    margin-right: 10px;
+    padding: 5px 15px 5px 15px;
+    background: green;
+    border-radius: 5px;
+}
+
+.button-del {
+    margin-right: 10px;
+    padding: 5px 15px 5px 15px;
+    background: rgb(128, 0, 0);
+    border-radius: 5px;
+}
+
+.tab {
+    border: 2px solid #2C3542;
+    border-radius: 24px;
+    min-height: 300px;
+}
+
+.titler {
+    padding: 10px;
+    font-size: 20px;
+}
+
+.role {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 15px 0px 15px 0px;
+    padding: 10px;
+}
+
+.role-info{
+    display: flex;
+    flex-direction: row;
+}
+
+.role-color {
+    width: 14px;
+    height: 14px;
+    background-color: yellow;
+    border-radius: 20px;
+    padding: 0px 10px 0px 10px;
+    margin-right: 10px;
+}
+
+.role-name {
+    font-weight: 400;
+}
+
+.role-info2 {
+    display: flex;
+    flex-direction: row;
+}
+
+.count {
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    background-color: #353D4C;
+    color: white;
+    text-align: center;
+    padding: 0px 10px 0px 10px;
+    margin-right: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.num {
+    margin-left: 2px;
+}
+
+.status {
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    background-color: #2C3542;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    padding: 0px 10px 0px 10px;
+}
+
+i {
+    padding: 2px;
+}
