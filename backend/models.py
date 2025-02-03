@@ -38,13 +38,13 @@ class Role(Base):
 	)
 	group_id: Mapped[int] = mapped_column(ForeignKey('Group.id'), nullable=False)
 	group: Mapped['Group'] = relationship(back_populates='roles')
-	usergroups: Mapped[List['UserGroup']] = relationship(
-		back_populates='roles', secondary='RoleUserGroup'
+	usergroups: Mapped[List['UsrGroup']] = relationship(
+		back_populates='roles', secondary='RoleUsrGroup'
 	)
 
 
-class User(Base):
-	__tablename__ = 'User'
+class Usr(Base):
+	__tablename__ = 'Usr'
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True)
 	name: Mapped[str] = mapped_column(String(16))
@@ -56,18 +56,18 @@ class User(Base):
 	is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 	is_bot: Mapped[bool] = mapped_column(Boolean, default=False)
 	avatar: Mapped[Optional[str]] = mapped_column(String)
-	panorama: Mapped[str] = mapped_column(String)
+	panorama: Mapped[str] = mapped_column(String, nullable=True)
 	created_at: Mapped[datetime.datetime] = mapped_column(
 		DateTime(timezone=True), server_default=func.now()
 	)
 
 	tokens: Mapped[Optional[List['Token']]] = relationship(back_populates='user')
 	groups: Mapped[Optional[List['Group']]] = relationship(
-		back_populates='users', secondary='UserGroup'
+		back_populates='users', secondary='UsrGroup'
 	)
 	messages: Mapped[Optional[List['Message']]] = relationship(back_populates='user')
 	readed_messages: Mapped[Optional[List['Message']]] = relationship(
-		back_populates='who_readed', secondary='UserReadedMessages'
+		back_populates='who_readed', secondary='UsrReadedMessages'
 	)
 
 	def __repr__(self):
@@ -80,8 +80,8 @@ class Token(Base):
 	id: Mapped[int] = mapped_column(Integer, primary_key=True)
 	title: Mapped[str] = mapped_column(String, default='No title')
 	token: Mapped[str] = mapped_column(String, unique=True)
-	user_id: Mapped[int] = mapped_column(ForeignKey('User.id'), nullable=False)
-	user: Mapped['User'] = relationship(back_populates='tokens')
+	user_id: Mapped[int] = mapped_column(ForeignKey('Usr.id'), nullable=False)
+	user: Mapped['Usr'] = relationship(back_populates='tokens')
 
 
 class Chat(Base):
@@ -101,15 +101,15 @@ class Message(Base):
 	id: Mapped[int] = mapped_column(Integer, primary_key=True)
 	local_id: Mapped[int] = mapped_column(Integer)
 	text: Mapped[str] = mapped_column(String)
-	user_id: Mapped[int] = mapped_column(ForeignKey('User.id'), nullable=False)
+	user_id: Mapped[int] = mapped_column(ForeignKey('Usr.id'), nullable=False)
 	chat_id: Mapped[int] = mapped_column(ForeignKey('Chat.id'), nullable=False)
 	created_at: Mapped[datetime.datetime] = mapped_column(
 		DateTime(timezone=True), server_default=func.now()
 	)
 
-	user: Mapped['User'] = relationship(back_populates='messages')
-	who_readed: Mapped['User'] = relationship(
-		back_populates='readed_messages', secondary='UserReadedMessages'
+	user: Mapped['Usr'] = relationship(back_populates='messages')
+	who_readed: Mapped['Usr'] = relationship(
+		back_populates='readed_messages', secondary='UsrReadedMessages'
 	)
 	chat: Mapped['Chat'] = relationship(back_populates='messages')
 
@@ -129,21 +129,21 @@ class Group(Base):
 		DateTime(timezone=True), server_default=func.now()
 	)
 
-	users: Mapped[List['User']] = relationship(
-		back_populates='groups', secondary='UserGroup'
+	users: Mapped[List['Usr']] = relationship(
+		back_populates='groups', secondary='UsrGroup'
 	)
 	chats: Mapped[List['Chat']] = relationship(back_populates='group', lazy='subquery')
 	roles: Mapped[List['Role']] = relationship(back_populates='group')
 
 
-class UserGroup(Base):
-	__tablename__ = 'UserGroup'
+class UsrGroup(Base):
+	__tablename__ = 'UsrGroup'
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True)
-	user_id: Mapped[int] = mapped_column(ForeignKey('User.id'), nullable=False)
+	user_id: Mapped[int] = mapped_column(ForeignKey('Usr.id'), nullable=False)
 	group_id: Mapped[int] = mapped_column(ForeignKey('Group.id'), nullable=False)
 	roles: Mapped[List['Role']] = relationship(
-		back_populates='usergroups', lazy='selectin', secondary='RoleUserGroup'
+		back_populates='usergroups', lazy='selectin', secondary='RoleUsrGroup'
 	)
 
 
@@ -157,17 +157,17 @@ class RolePermission(Base):
 	)
 
 
-class RoleUserGroup(Base):
-	__tablename__ = 'RoleUserGroup'
+class RoleUsrGroup(Base):
+	__tablename__ = 'RoleUsrGroup'
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True)
 	role_id: Mapped[int] = mapped_column(ForeignKey('Role.id'), nullable=False)
-	usergroup_id: Mapped[int] = mapped_column(ForeignKey('UserGroup.id'), nullable=False)
+	usergroup_id: Mapped[int] = mapped_column(ForeignKey('UsrGroup.id'), nullable=False)
 
 
-class UserReadedMessages(Base):
-	__tablename__ = 'UserReadedMessages'
+class UsrReadedMessages(Base):
+	__tablename__ = 'UsrReadedMessages'
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True)
-	user_id: Mapped[int] = mapped_column(ForeignKey('User.id'), nullable=False)
+	user_id: Mapped[int] = mapped_column(ForeignKey('Usr.id'), nullable=False)
 	message_id: Mapped[int] = mapped_column(ForeignKey('Message.id'), nullable=False)

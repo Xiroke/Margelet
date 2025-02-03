@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from config import settings
 from database import Base
 from auth.utils import get_hashed_password
-from models import User, Token
+from models import Usr, Token
 import pytest_asyncio
 from seed import seed_permissions, TestSeed
 
@@ -31,7 +31,7 @@ async def session(setup_database):
 
 @pytest_asyncio.fixture(scope='function')
 async def test_user(session):
-	user = User(
+	user = Usr(
 		name='testuser',
 		email='test@example.com',
 		name_account='testuser',
@@ -46,7 +46,7 @@ async def test_user(session):
 
 @pytest_asyncio.fixture(scope='function')
 async def test_second_user(session):
-	user = User(
+	user = Usr(
 		name='testseconduser',
 		email='test_second@example.com',
 		name_account='testseconduser',
@@ -107,7 +107,7 @@ async def load_seed_messages(session, test_user, load_seed_chats, load_seed_role
 
 @pytest_asyncio.fixture(scope='function')
 async def test_bot(session):
-	bot = User(
+	bot = Usr(
 		name='bot',
 		email='bot@example.com',
 		name_account='testbot',

@@ -59,7 +59,7 @@ export function useTokenSWR() {
 }
 
 export function useSearchUsersSWR() {
-    const { data, error, isLoading } = useSWR(`${process.env.NEXT_PUBLIC_API_PATH}/chat/users`, fetcherGet)
+    const { data, error, isLoading } = useSWR(`${process.env.NEXT_PUBLIC_API_PATH}/users`, fetcherGet)
 
     return {
         users: data,

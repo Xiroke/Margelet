@@ -2,7 +2,7 @@ from passlib.context import CryptContext
 import jwt
 from sqlalchemy.exc import IntegrityError
 from auth.schemas import PermissionEnum
-from models import User, Token
+from models import Usr, Token
 from datetime import datetime
 from typing import Annotated
 from fastapi import Depends, Request, status, HTTPException
@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
 from dao import (
 	PermissionManager,
-	UserManager,
+	UsrManager,
 	TokenManager,
-	UserGroupManager,
+	UsrGroupManager,
 )
 from typing import List
 import logging
@@ -69,9 +69,9 @@ async def authenticate_user(
 	email: str,
 	password: str,
 	session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> User:
+) -> Usr:
 	# получение позльзователя
-	user: User = await UserManager.get_one_by(session, email=email)
+	user: Usr = await UsrManager.get_one_by(session, email=email)
 
 	if not verify_password(password, user.hashed_password):
 		raise HTTPException(
@@ -81,7 +81,7 @@ async def authenticate_user(
 	return user
 
 
-async def create_access_token(session: AsyncSession, user: User, data: dict):
+async def create_access_token(session: AsyncSession, user: Usr, data: dict):
 	to_encode = data.copy()
 	to_encode.update({'created': datetime.utcnow().strftime('%d%H%M%S')})
 	encoded_jwt = jwt.encode(
@@ -118,8 +118,8 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-	current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
+	current_user: Annotated[Usr, Depends(get_current_user)],
+) -> Usr:
 	if not current_user.is_active:
 		raise HTTPException(status_code=400, detail='Inactive user')
 	return current_user
@@ -130,12 +130,12 @@ async def list_permissions(
 	user_id: int,
 	group_id,
 ):
-	return await UserGroupManager.get_permissions(session, user_id, group_id)
+	return await UsrGroupManager.get_permissions(session, user_id, group_id)
 
 
 async def my_list_permissions(
 	session: Annotated[AsyncSession, Depends(get_async_session)],
-	user: Annotated[User, Depends(get_current_active_user)],
+	user: Annotated[Usr, Depends(get_current_active_user)],
 	group_id,
 ):
 	return await list_permissions(session, user.id, group_id)
@@ -143,10 +143,10 @@ async def my_list_permissions(
 
 async def my_priority_role(
 	session: Annotated[AsyncSession, Depends(get_async_session)],
-	user: Annotated[User, Depends(get_current_active_user)],
+	user: Annotated[Usr, Depends(get_current_active_user)],
 	group_id: int,
 ):
-	return await UserGroupManager.get_priority_role(session, user.id, group_id=group_id)
+	return await UsrGroupManager.get_priority_role(session, user.id, group_id=group_id)
 
 
 async def get_list_permissions_in(

@@ -16,40 +16,40 @@ class TokenBase(BaseModel):
 
 class TokenCreate(TokenBase):
 	# token: str
-	user: 'UserDB'
+	user: 'UsrDB'
 
 
 class TokenRead(TokenBase):
 	id: int
 	# token: str
-	user: 'UserDB'
+	user: 'UsrDB'
 
 
 class TokenDB(TokenRead):
 	# id: int
 	# token: str
-	# user: "UserDB
+	# user: "UsrDB
 	pass
 
 
-class UserBase(BaseModel):
+class UsrBase(BaseModel):
 	model_config = ConfigDict(from_attributes=True)
 
 	name: str
 	name_account: str
 
 
-class UserCreate(UserBase):
+class UsrCreate(UsrBase):
 	name: str
 	email: str
 	password: str
 
 
-class UserRead(UserBase):
+class UsrRead(UsrBase):
 	id: int
 
 
-class UserUpdate(BaseModel):
+class UsrUpdate(BaseModel):
 	name: Optional[str] = None
 	email: Optional[str] = None
 	hashed_password: Optional[str] = None
@@ -58,7 +58,7 @@ class UserUpdate(BaseModel):
 	is_superuser: Optional[bool] = None
 
 
-class UserDB(UserRead):
+class UsrDB(UsrRead):
 	# id: int
 	# name: str
 	email: str
@@ -69,7 +69,7 @@ class UserDB(UserRead):
 	tokens: Optional[List[TokenRead]] = None
 
 
-class BotUserCreate(UserBase):
+class BotUsrCreate(UsrBase):
 	name: str
 	password: str
 

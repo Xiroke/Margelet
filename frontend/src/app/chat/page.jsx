@@ -84,6 +84,7 @@ export function Group({ id, title, status, isPersonalGroup }) {
   const setChatId = useStore((state) => state.setChatId);
   const setIsPersonalGroup = useStore((state) => state.setIsPersonalGroup);
   const { user } = useUsersMeSWR();
+  
   title = isPersonalGroup
     ? title
         .split(':')[0]
@@ -189,7 +190,7 @@ export function LeftPanel() {
       setUsers(null);
       return;
     }
-    fetch(`${process.env.NEXT_PUBLIC_API_PATH}/chat/users/${searchWord}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_PATH}/users/${searchWord}`, {
       credentials: 'include',
     })
       .then((response) => (response.status == 200 ? response.json() : null))
@@ -296,7 +297,7 @@ export function LeftPanel() {
                             className='users-add-friend'
                             onClick={() => {
                               fetch(
-                                `${process.env.NEXT_PUBLIC_API_PATH}/chat/users/add_friend/${item.id}`,
+                                `${process.env.NEXT_PUBLIC_API_PATH}/users/add_friend/${item.id}`,
                                 { method: 'POST', credentials: 'include' }
                               );
                             }}

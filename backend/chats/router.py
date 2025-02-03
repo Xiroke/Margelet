@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
-from models import Chat, User
-from dao import ChatManager, GroupManager, UserGroupManager
+from models import Chat, Usr
+from dao import ChatManager, GroupManager, UsrGroupManager
 from database import get_async_session
 from auth.utils import (
 	get_token,
@@ -19,10 +19,10 @@ router = APIRouter(prefix='/api/chats', tags=['chats'])
 @router.get('/{group_id}')
 async def get_group_chats(
 	group_id: int,
-	user: Annotated[User, Depends(get_current_active_user)],
+	user: Annotated[Usr, Depends(get_current_active_user)],
 	session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
-	await UserGroupManager.get_one_by(session, user_id=user.id, group_id=group_id)
+	await UsrGroupManager.get_one_by(session, user_id=user.id, group_id=group_id)
 
 	group = await GroupManager.get_one_by(session, id=group_id)
 	chats = await GroupManager.get_chats(session, group=group)
@@ -33,11 +33,11 @@ async def get_group_chats(
 async def create_group_chat(
 	session: Annotated[AsyncSession, Depends(get_async_session)],
 	permissions: Annotated[str, Depends(my_list_permissions)],
-	user: Annotated[User, Depends(get_current_active_user)],
+	user: Annotated[Usr, Depends(get_current_active_user)],
 	title: str,
 	group_id: int,
 ):
-	await UserGroupManager.get_one_by(session, user_id=user.id, group_id=group_id)
+	await UsrGroupManager.get_one_by(session, user_id=user.id, group_id=group_id)
 
 	if PermissionEnum.CAN_CREATE_CHAT.value not in permissions:
 		raise HTTPException(status.HTTP_403_FORBIDDEN)
@@ -55,9 +55,9 @@ async def delete_group_chat(
 	permissions: Annotated[str, Depends(my_list_permissions)],
 	chat_id: int,
 	group_id: int,
-	user: Annotated[User, Depends(get_current_active_user)],
+	user: Annotated[Usr, Depends(get_current_active_user)],
 ):
-	await UserGroupManager.get_one_by(session, user_id=user.id, group_id=group_id)
+	await UsrGroupManager.get_one_by(session, user_id=user.id, group_id=group_id)
 
 	if PermissionEnum.CAN_DELETE_CHAT.value not in permissions:
 		return HTTPException(status.HTTP_403_FORBIDDEN)

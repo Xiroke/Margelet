@@ -1,11 +1,11 @@
 from auth.utils import authenticate_user
 from fastapi.requests import Request
-from models import Chat, Group, Message, Token, User
+from models import Chat, Group, Message, Token, Usr
 from sqladmin import ModelView
 from sqladmin.authentication import AuthenticationBackend
 
 
-class UserAdmin(ModelView, model=User):
+class UsrAdmin(ModelView, model=Usr):
 	column_list = [
 		'id',
 		'name',
@@ -67,5 +67,5 @@ class AdminAuth(AuthenticationBackend):
 
 
 def add_views(admin):
-	model_admin = [UserAdmin, GroupAdmin, MessageAdmin, TokenAdmin, ChatAdmin]
+	model_admin = [UsrAdmin, GroupAdmin, MessageAdmin, TokenAdmin, ChatAdmin]
 	[admin.add_view(item) for item in model_admin]

@@ -9,12 +9,15 @@ from dao import (
 	MessageManager,
 	PermissionManager,
 	RoleManager,
-	UserGroupManager,
-	UserManager,
+	UsrGroupManager,
+	UsrManager,
 	TokenManager,
 )
-from models import Chat, Group, Permission, Role, User
+from models import Chat, Group, Permission, Role, Usr
+from logging_settings import get_logger
 
+
+logger = get_logger(__name__)
 # admin = "admin"
 # CAN_EDIT_ROLE = "can_edit_role"
 # CAN_CREATE_GROUP = "can_create_group"
@@ -43,8 +46,13 @@ async def seed_permissions(session: AsyncSession):
 
 
 async def seed_admin(session: AsyncSession):
+	existing_admin = await UsrManager.get_one_by(session, email=settings.ADMIN_EMAIL)
+
+	if existing_admin:
+		return existing_admin
+
 	hashed_password = get_hashed_password(settings.ADMIN_PASSWORD)
-	admin = User(
+	admin = Usr(
 		name=settings.ADMIN_NAME,
 		name_account=settings.ADMIN_NAME,
 		email=settings.ADMIN_EMAIL,
@@ -53,7 +61,7 @@ async def seed_admin(session: AsyncSession):
 		is_verified=True,
 		is_superuser=True,
 	)
-	test = User(
+	test = Usr(
 		name='test',
 		name_account='test',
 		email='test@test.com',
@@ -62,21 +70,22 @@ async def seed_admin(session: AsyncSession):
 		is_verified=True,
 		is_superuser=False,
 	)
-	try:
-		await UserManager.create(session, admin)
-		await UserManager.create(session, test)
-		await session.commit()
-		return admin
-	except IntegrityError:
-		await session.rollback()
-		return await UserManager.get_one_by(session, email=settings.ADMIN_EMAIL)
+
+	await UsrManager.create(session, admin)
+	await UsrManager.create(session, test)
+	await session.commit()
+	return admin
 
 
 class TestSeed:
 	@staticmethod
-	async def create_group(session: AsyncSession, user: User):
+	async def create_group(session: AsyncSession, user: Usr):
 		if not user:
-			raise ValueError('User must be provided (create_group)')
+			raise ValueError('Usr must be provided (create_group)')
+		
+		existing_gp1 = await GroupManager.get_one_by(session, title='Test Group 1')
+		if existing_gp1:
+			return existing_gp1
 		
 		gp1 = Group(
 			title='Test Group 1',
@@ -84,27 +93,25 @@ class TestSeed:
 			is_personal_group=False,
 		)
 		gp1.users.append(user)
-		try:
-			await GroupManager.create(session, gp1)
-			await session.commit()
-			return gp1
+		await GroupManager.create(session, gp1)
+		await session.commit()
+		return gp1
 
-		except IntegrityError:
-			await session.rollback()
+
 
 	@staticmethod
-	async def create_chats(session: AsyncSession):
+	async def create_chats(session: AsyncSession, group: Group):
+		exicsing_chats = await ChatManager.get_filtered(session, group_id=group.id)
+		if exicsing_chats:
+			return exicsing_chats
 		chats = [
-			Chat(title='Test Chat 1', group_id=1),
-			Chat(title='Test Chat 2', group_id=1),
+			Chat(title='Test Chat 1', group_id=group.id),
+			Chat(title='Test Chat 2', group_id=group.id),
 		]
-		try:
-			await ChatManager.create_all(session, chats)
-			await session.commit()
-			return chats
+		await ChatManager.create_all(session, chats)
+		await session.commit()
+		return chats
 
-		except IntegrityError:
-			await session.rollback()
 
 	@staticmethod
 	async def create_messages(session: AsyncSession, user_id: int):
@@ -132,7 +139,7 @@ class TestSeed:
 			await session.rollback()
 
 	@staticmethod
-	async def create_roles(session: AsyncSession, group: Group, user: User):
+	async def create_roles(session: AsyncSession, group: Group, user: Usr):
 		if not group or not user:
 			raise ValueError('Group and user must be provided (create_roles)')
 		
@@ -146,7 +153,7 @@ class TestSeed:
 		except IntegrityError:
 			await session.rollback()
 
-		usergroup = await UserGroupManager.get_one_by(session, user_id=user.id)
+		usergroup = await UsrGroupManager.get_one_by(session, user_id=user.id)
 
 		try:
 			usergroup.roles.append(role_admin)
@@ -156,7 +163,7 @@ class TestSeed:
 	@staticmethod
 	async def create_bot(session: AsyncSession):
 		hashed_password = get_hashed_password('test_password')
-		bot_user = User(
+		bot_user = Usr(
 			name='Test Bot',
 			name_account='TestBot',
 			email='TestBot' + '@marglelet.bot',
@@ -164,7 +171,7 @@ class TestSeed:
 			is_bot=True,
 		)
 		try:
-			await UserManager.create(session, bot_user)
+			await UsrManager.create(session, bot_user)
 			await session.commit()
 			token = await create_access_token(
 				session, bot_user, data={'email': bot_user.email}
@@ -172,7 +179,7 @@ class TestSeed:
 			return token
 		except IntegrityError:
 			await session.rollback()
-			bot_user = await UserManager.get_one_by(session, name_account='TestBot')
+			bot_user = await UsrManager.get_one_by(session, name_account='TestBot')
 			token = await create_access_token(
 				session, bot_user, data={'email': bot_user.email}
 			)

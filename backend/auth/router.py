@@ -2,7 +2,7 @@ import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, Form, status, Response
 from datetime import timedelta
-from models import User
+from models import Usr
 from .utils import (
 	authenticate_user,
 	create_access_token,
@@ -12,8 +12,8 @@ from .utils import (
 	list_permissions,
 	my_list_permissions,
 )
-from dao import UserManager, TokenManager, UserGroupManager
-from .schemas import UserRead
+from dao import UsrManager, TokenManager, UsrGroupManager
+from .schemas import UsrRead
 from database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.smtp import send_message
@@ -36,7 +36,7 @@ async def register(
 	try:
 		hashed_password = get_hashed_password(password)
 		random_num_for_name_account = randint(1000, 9999)
-		user_db = User(
+		user_db = Usr(
 			name=name,
 			name_account=name + '#' + str(random_num_for_name_account),
 			email=email,
@@ -45,7 +45,7 @@ async def register(
 			is_verified=False,
 			is_superuser=False,
 		)
-		await UserManager.create(session, user_db)
+		await UsrManager.create(session, user_db)
 		token = await create_access_token(
 			session=session, user=user_db, data={'email': user_db.email}
 		)
@@ -73,7 +73,7 @@ async def login_for_access_token(
 	"""
 	# создание токена при созданном пользователе
 
-	user: User = await authenticate_user(email, password, session)
+	user: Usr = await authenticate_user(email, password, session)
 
 	access_token = await create_access_token(
 		session=session, user=user, data={'email': user.email}
@@ -99,8 +99,8 @@ async def get_token(token: Annotated[Token, Depends(get_token)]):
 
 @router.get('/users/me')
 async def users_me(
-	current_user: Annotated[User, Depends(get_current_active_user)],
-) -> UserRead:
+	current_user: Annotated[Usr, Depends(get_current_active_user)],
+) -> UsrRead:
 	return current_user
 
 
@@ -109,7 +109,7 @@ async def verify(
 	token: str, session: Annotated[AsyncSession, Depends(get_async_session)]
 ):
 	token = await TokenManager.get_one_by(session, token=token)
-	user = await UserManager.get_one_by(session, id=token.user_id)
+	user = await UsrManager.get_one_by(session, id=token.user_id)
 	await TokenManager.delete(session, token)
 	user.is_verified = True
 	await session.commit()

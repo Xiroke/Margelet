@@ -3,16 +3,16 @@ from sqlalchemy import delete, select, func, and_, or_
 from sqlalchemy.sql.functions import user
 from models import (
 	RolePermission,
-	RoleUserGroup,
-	User,
+	RoleUsrGroup,
+	Usr,
 	Token,
-	UserGroup,
+	UsrGroup,
 	Permission,
 	Role,
 	Group,
 	Chat,
 	Message,
-	UserReadedMessages,
+	UsrReadedMessages,
 )
 from sqlalchemy.orm import joinedload
 from abc import ABC
@@ -21,7 +21,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from types import NoneType
 from chat.schemas import AllLastMessages
+from logging_settings import get_logger
 
+
+logger = get_logger(__name__)
 
 class BaseManager(ABC):
 	model = None
@@ -89,8 +92,8 @@ class BaseManager(ABC):
 			raise HTTPException(status_code=500, detail='Unknown error occurred')
 
 
-class UserManager(BaseManager):
-	model = User
+class UsrManager(BaseManager):
+	model = Usr
 
 	@classmethod
 	async def get_one_by(cls, session: AsyncSession, **filter):
@@ -104,7 +107,7 @@ class UserManager(BaseManager):
 		return result
 
 	@classmethod
-	async def get_groups(cls, session: AsyncSession, user: User):
+	async def get_groups(cls, session: AsyncSession, user: Usr):
 		try:
 			result = await session.execute(
 				select(cls.model)
@@ -122,9 +125,9 @@ class UserManager(BaseManager):
 	async def search_users(cls, session: AsyncSession, field: str):
 		try:
 			result = await session.execute(
-				select(User).where(
+				select(Usr).where(
 					or_(
-						field == cls.model.id,
+						field == str(cls.model.id),
 						field == cls.model.name,
 						field == cls.model.name_account,
 					)
@@ -133,17 +136,18 @@ class UserManager(BaseManager):
 			result = result.scalars().all()
 		except NoResultFound:
 			raise HTTPException(status_code=404, detail='No result found')
-		except Exception:
+		except Exception as e:
+			logger.debug(e)
 			raise HTTPException(status_code=500, detail='Unknown error occurred')
 		return result
 
 	# @classmethod
-	# async def get_chats_ids(cls, session: AsyncSession, user: User):
+	# async def get_chats_ids(cls, session: AsyncSession, user: Usr):
 	#     try:
 	#         result = await session.execute(
 	#             select(cls.model)
-	#                 .join(UserGroup, UserGroup.user_id==user.id)
-	#                 .join(Group, Group.id == UserGroup.group_id)
+	#                 .join(UsrGroup, UsrGroup.user_id==user.id)
+	#                 .join(Group, Group.id == UsrGroup.group_id)
 	#                 .join(Chat)
 	#                 .where(cls.model.id == user.id
 	#             )
@@ -173,14 +177,14 @@ class TokenManager(BaseManager):
 			raise HTTPException(status_code=404, detail='No result found')
 
 
-class UserGroupManager(BaseManager):
-	model = UserGroup
+class UsrGroupManager(BaseManager):
+	model = UsrGroup
 
 	@classmethod
 	async def get_permissions(
-		cls, session: AsyncSession, user_id: int | User, group_id: int
+		cls, session: AsyncSession, user_id: int | Usr, group_id: int
 	):
-		if isinstance(user_id, User):
+		if isinstance(user_id, Usr):
 			user_id = user_id.id
 		try:
 			result = await session.execute(
@@ -192,8 +196,8 @@ class UserGroupManager(BaseManager):
 						cls.model.group_id == group_id,
 					),
 				)
-				.join(RoleUserGroup, RoleUserGroup.usergroup_id == UserGroup.id)
-				.join(Role, Role.id == RoleUserGroup.role_id)
+				.join(RoleUsrGroup, RoleUsrGroup.usergroup_id == UsrGroup.id)
+				.join(Role, Role.id == RoleUsrGroup.role_id)
 				.join(RolePermission, RolePermission.role_id == Role.id)
 				.where(Permission.id == RolePermission.permission_id)
 			)
@@ -205,8 +209,8 @@ class UserGroupManager(BaseManager):
 		return result
 
 	@classmethod
-	async def get_roles(cls, session: AsyncSession, user_id: int | User):
-		if isinstance(user_id, User):
+	async def get_roles(cls, session: AsyncSession, user_id: int | Usr):
+		if isinstance(user_id, Usr):
 			user_id = user_id.id
 		try:
 			result = await session.execute(
@@ -221,19 +225,19 @@ class UserGroupManager(BaseManager):
 
 	@classmethod
 	async def get_priority_role(
-		cls, session: AsyncSession, user_id: int | User, group_id: int
+		cls, session: AsyncSession, user_id: int | Usr, group_id: int
 	):
-		if isinstance(user_id, User):
+		if isinstance(user_id, Usr):
 			user_id = user_id.id
 		try:
 			result = await session.execute(
 				select(func.min(Role.priority))
 				.join(cls.model, cls.model.user_id == user_id)
 				.join(
-					RoleUserGroup,
+					RoleUsrGroup,
 					and_(
-						RoleUserGroup.usergroup_id == cls.model.id,
-						RoleUserGroup.role_id == Role.id,
+						RoleUsrGroup.usergroup_id == cls.model.id,
+						RoleUsrGroup.role_id == Role.id,
 					),
 				)
 				.filter(cls.model.group_id == group_id)
@@ -345,8 +349,8 @@ class MessageManager(BaseManager):
 	):
 		try:
 			result = await session.execute(
-				select(cls.model, User.name)
-				.join(User, User.id == cls.model.user_id)
+				select(cls.model, Usr.name)
+				.join(Usr, Usr.id == cls.model.user_id)
 				.where(cls.model.chat_id == chat_id)
 				.where(cls.model.local_id > last_message_local_id)
 				.order_by(cls.model.local_id)
@@ -359,32 +363,32 @@ class MessageManager(BaseManager):
 		return result
 
 	@classmethod
-	async def get_all_messages_unread(cls, session: AsyncSession, user: User):
+	async def get_all_messages_unread(cls, session: AsyncSession, user: Usr):
 		try:
 			result = await session.execute(
 				select(cls.model)
 				.select_from(cls.model)
-				.join(UserGroup, UserGroup.user_id == user.id)
-				.join(Group, Group.id == UserGroup.group_id)
+				.join(UsrGroup, UsrGroup.user_id == user.id)
+				.join(Group, Group.id == UsrGroup.group_id)
 				.join(Chat, Chat.group_id == Group.id)
 				.outerjoin(
-					UserReadedMessages,
+					UsrReadedMessages,
 					and_(
-						UserReadedMessages.user_id == user.id,
-						UserReadedMessages.message_id == cls.model.id,
+						UsrReadedMessages.user_id == user.id,
+						UsrReadedMessages.message_id == cls.model.id,
 					),
 				)
 				.where(
 					and_(
 						cls.model.chat_id == Chat.id,
-						UserReadedMessages.id.is_(None),
+						UsrReadedMessages.id.is_(None),
 					)
 				)
 			)
 			result = result.scalars().all()
 			for i in result:
-				readed = UserReadedMessages(message_id=i.id, user_id=user.id)
-				await UserReadedMessagesManager.create(session, readed)
+				readed = UsrReadedMessages(message_id=i.id, user_id=user.id)
+				await UsrReadedMessagesManager.create(session, readed)
 			await session.commit()
 
 		except NoResultFound:
@@ -394,5 +398,5 @@ class MessageManager(BaseManager):
 		return result
 
 
-class UserReadedMessagesManager(BaseManager):
-	model = UserReadedMessages
+class UsrReadedMessagesManager(BaseManager):
+	model = UsrReadedMessages

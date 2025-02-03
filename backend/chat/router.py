@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, Query, Depends
 from fastapi.websockets import WebSocketDisconnect
 from typing import Annotated, Dict, List
-from dao import ChatManager, TokenManager, MessageManager, UserGroupManager
+from dao import ChatManager, TokenManager, MessageManager, UsrGroupManager
 from database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.utils import get_current_active_user, verify_token
@@ -141,8 +141,8 @@ async def chat_last_messages(
 	chat_id: int,
 	last_message_local_id: int | List[int],
 ):
-	# is User in Group
-	await UserGroupManager.get_one_by(session, group_id=group_id, user_id=user.id)
+	# is Usr in Group
+	await UsrGroupManager.get_one_by(session, group_id=group_id, user_id=user.id)
 	# is Chat in This Group
 	await ChatManager.get_one_by(session, id=chat_id, group_id=group_id)
 
@@ -169,7 +169,7 @@ async def chat_all_last_messages(
 		except ValidationError:
 			raise HTTPException(status_code = 400)
 		
-		await UserGroupManager.get_one_by(
+		await UsrGroupManager.get_one_by(
 			session, group_id=item.group_id, user_id=user.id
 		)
 		await ChatManager.get_one_by(session, id=item.chat_id, group_id=item.group_id)

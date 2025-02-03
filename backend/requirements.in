@@ -9,6 +9,7 @@ sqladmin[full]
 pyjwt
 passlib
 passlib[bcrypt]
+bcrypt==4.0.1
 sqlalchemy
 pydantic[email]
 pytest-asyncio

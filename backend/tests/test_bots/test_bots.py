@@ -1,5 +1,5 @@
-from dao import UserReadedMessagesManager
-from models import UserReadedMessages
+from dao import UsrReadedMessagesManager
+from models import UsrReadedMessages
 from config import settings
 from fastapi.testclient import TestClient
 from bots.router import app
@@ -15,8 +15,8 @@ async def test_no_read_messages(
 ):
 	load_seed_group.users.append(test_bot)
 	await session.commit()
-	await UserReadedMessagesManager.create(
-		session, UserReadedMessages(user_id=test_bot.id, message_id=1)
+	await UsrReadedMessagesManager.create(
+		session, UsrReadedMessages(user_id=test_bot.id, message_id=1)
 	)
 	await session.commit()
 	response = client.get('/no_read_messages', cookies={'access_token': test_bot_token})

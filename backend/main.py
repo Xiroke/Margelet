@@ -108,7 +108,7 @@ async def on_startup():
 		await seed_permissions(session)
 		admin = await seed_admin(session)
 		group = await TestSeed.create_group(session, admin)
-		await TestSeed.create_chats(session)
+		await TestSeed.create_chats(session, group)
 		await TestSeed.create_roles(session, group, admin)
 		await TestSeed.create_messages(session, 1)
 		await TestSeed.create_bot(session)

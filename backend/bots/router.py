@@ -19,9 +19,9 @@ from auth.utils import (
     verify_token,
 )
 from bots.utils import get_no_read_messages
-from models import User
-from auth.schemas import BotUserCreate
-from dao import UserManager, TokenManager
+from models import Usr
+from auth.schemas import BotUsrCreate
+from dao import UsrManager, TokenManager
 from chat.router import connection_manager_users
 from .shemas import BotWebsocketReceived
 from messages.shemas import MessageRead
@@ -64,7 +64,7 @@ async def ping():
 @app.get('/no_read_messages')
 async def no_read_messages(
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    user: Annotated[User, Depends(get_current_active_user)],
+    user: Annotated[Usr, Depends(get_current_active_user)],
 ) -> List[MessageRead]:
     """Get all messassges that not read"""
     return await get_no_read_messages(session, user)
@@ -73,18 +73,18 @@ async def no_read_messages(
 @app.post('/create_bot')
 async def create_bot(
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    user_create: Annotated[BotUserCreate, Depends()],
+    user_create: Annotated[BotUsrCreate, Depends()],
 ):
     """Create bot"""
     hashed_password = get_hashed_password(user_create.password)
-    bot_user = User(
+    bot_user = Usr(
         name=user_create.name,
         name_account=user_create.name_account,
         email=user_create.name_account + '@marglelet.bot',
         hashed_password=hashed_password,
         is_bot=True,
     )
-    await UserManager.create(session, bot_user)
+    await UsrManager.create(session, bot_user)
     await session.commit()
     token = await create_access_token(session, bot_user)
     return token
@@ -93,7 +93,7 @@ async def create_bot(
 # @app.post('/send_message/{to_chat_id}')
 # async def send_message(
 # 	session: Annotated[AsyncSession, Depends(get_async_session)],
-# 	user: Annotated[User, Depends(get_current_active_user)],
+# 	user: Annotated[Usr, Depends(get_current_active_user)],
 # 	to_chat_id: int,
 # ):
 # 	return 'good'
