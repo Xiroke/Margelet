@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "pytest",
             "cwd": "${workspaceFolder}/backend",
-            "args": ["tests/test_bots/test_bots.py"],
+            "args": ["tests/test_auth_utils.py"],
         },
         {
             "name": "Python Debugger: Main.py",

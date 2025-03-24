@@ -4,11 +4,11 @@ export function openDB() {
     return new Promise((resolve, reject) => {
         let openRequest = indexedDB.open("store", 1);
 
-        openRequest.onupgradeneeded = function() {
+        openRequest.onupgradeneeded = function () {
             let db = openRequest.result;
 
             if (!db.objectStoreNames.contains("groups")) {
-                db.createObjectStore("groups", { keyPath: "groupId"});
+                db.createObjectStore("groups", { keyPath: "groupId" });
             }
 
             if (!db.objectStoreNames.contains("messages")) {
@@ -17,16 +17,20 @@ export function openDB() {
             }
 
             if (!db.objectStoreNames.contains("chatLastIdMessages")) {
-                db.createObjectStore("chatLastIdMessages", { keyPath: "chatId"});
+                db.createObjectStore("chatLastIdMessages", { keyPath: "chatId" });
+            }
+
+            if (!db.objectStoreNames.contains("avatarUrls")) {
+                db.createObjectStore("avatarUrls", { keyPath: "userId" });
             }
 
         };
 
-        openRequest.onerror = function() {
+        openRequest.onerror = function () {
             reject(openRequest.error);
         };
 
-        openRequest.onsuccess = function() {
+        openRequest.onsuccess = function () {
             let db = openRequest.result;
             resolve(db);
         };
